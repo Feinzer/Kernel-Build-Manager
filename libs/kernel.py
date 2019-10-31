@@ -23,11 +23,11 @@ class Kernel():
                 defconfig: str,
                 auto_dtb: bool,
                 clean_build: bool,
-                configs_dir: str,
-                toolchains_dir: str,
+                user_kernels: str,
+                user_toolchains: str,
                 custom_toolchain_dir: str = None):
         self.name = name
-        self.config_dir = os.path.join(configs_dir, self.name)
+        self.config_dir = os.path.join(user_kernels, self.name)
         self.source_code = os.path.join(self.config_dir, "source")
         self.version = version
         self.arch = arch
@@ -42,12 +42,12 @@ class Kernel():
             self.toolchain = custom_toolchain_dir
         else:
             self.toolchain = os.path.join(
-                toolchains_dir,
+                user_toolchains,
                 TOOLCHAIN_PREFIX[self.arch]
             )
             if (self.arch == "arm64"):
                 self.toolchain32 = os.path.join(
-                    toolchains_dir,
+                    user_toolchains,
                     TOOLCHAIN_PREFIX["arm"]
                 )
 
@@ -85,11 +85,11 @@ class Kernel():
 
         # Clean source code before compilation
         if (self.clean_build):
-            print("\n - Cleaning up the source code")
+            print("\n - Cleaning up the source code\n")
             tools.run_command("make clean", self.source_code)
 
         # Load selected defconfig
-        print("\n - Loading {defconfig} for {device} {arch}".format(
+        print("\n - Loading {defconfig} for {device} {arch}\n".format(
             defconfig = self.defconfig,
             device = self.device_codename,
             arch = self.arch
@@ -111,7 +111,7 @@ class Kernel():
             _variables.append("CROSS_COMPILE_ARM32={}".format(self.toolchain32))
 
         # Start compiling.
-        print("\n\n")
+        print("\n")
         tools.run_command("make -j$(nproc)",
                           self.source_code,
                           _variables)

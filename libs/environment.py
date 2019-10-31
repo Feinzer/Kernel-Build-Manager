@@ -8,9 +8,9 @@ GOOGLE_TOOLCHAIN = {
 
 class Environment():
     def __init__(self, userfiles: str):
-        self.userfiles = userfiles
-        self.kernels_dir = os.path.join(self.userfiles, "Kernels")
-        self.toolchain_dir = os.path.join(self.userfiles, "Toolchain")
+        self.user_files = userfiles
+        self.user_kernels = os.path.join(self.user_files, "Kernels")
+        self.user_toolchains = os.path.join(self.user_files, "Toolchain")
 
     def setup(self):
         _folders = vars(self)
@@ -22,20 +22,18 @@ class Environment():
 
         # Check for custom toolchain and download it.
         if custom_toolchain_url:
-            self.toolchain_dir = os.path.join(self.toolchain_dir, "custom")
-            if (os.path.exists(self.toolchain_dir)):
-                print("\n Custom toolchain already present in {}\n".format(self.toolchain_dir))
+            _custom_dir = os.path.join(self.user_toolchains, "custom")
+            if (os.path.exists(_custom_dir)):
+                print("\n Custom toolchain already present in {}\n".format(_custom_dir))
             else:
                 print("\n Downloading custom toolchain from {}\n".format(custom_toolchain_url))
-                tools.git_clone(custom_toolchain_url, self.toolchain_dir)
-
-            return self.toolchain_dir
+                tools.git_clone(custom_toolchain_url, _custom_dir)
+            return
 
         # Check for the current architecture toolchain and download it if missing.
-        self.toolchain_dir = os.path.join(self.toolchain_dir, kernel_arch)
-        if not (os.path.exists(self.toolchain_dir)):
+        _toolchain_dir = os.path.join(self.user_toolchains, kernel_arch)
+        if not (os.path.exists(_toolchain_dir)):
             print("\n Toolchain for {} not found, downloading automatically from google...\n".format(kernel_arch))
-            tools.git_clone(GOOGLE_TOOLCHAIN[kernel_arch], self.toolchain_dir)
-
-        return self.toolchain_dir
+            tools.git_clone(GOOGLE_TOOLCHAIN[kernel_arch], _toolchain_dir)
+        return
 

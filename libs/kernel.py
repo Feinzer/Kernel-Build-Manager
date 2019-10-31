@@ -1,6 +1,17 @@
 import os, json
 import libs.tools as tools
 
+TOOLCHAIN_PREFIX = {
+    "arm":os.path.join(
+        "arm",
+        os.path.join("bin", "arm-linux-androideabi-")
+    ),
+    "arm64":os.path.join(
+        "arm64",
+        os.path.join("bin", "aarch64-linux-android-")
+    )
+}
+
 class Kernel():
     def __init__(self, 
                 name: str,
@@ -12,7 +23,9 @@ class Kernel():
                 defconfig: str,
                 auto_dtb: bool,
                 clean_build: bool,
-                configs_dir: str):
+                configs_dir: str,
+                toolchains_dir: str,
+                custom_toolchain_dir: str = None):
         self.name = name
         self.config_dir = os.path.join(configs_dir, self.name)
         self.source_code = os.path.join(self.config_dir, "source")
@@ -24,6 +37,19 @@ class Kernel():
         self.defconfig = defconfig
         self.auto_dtb = auto_dtb
         self.clean_build = clean_build
+
+        if (custom_toolchain_dir and os.path.exists(custom_toolchain_dir)):
+            self.toolchain = custom_toolchain_dir
+        else:
+            self.toolchain = os.path.join(
+                toolchains_dir,
+                TOOLCHAIN_PREFIX[self.arch]
+            )
+            if (self.arch == "arm64"):
+                self.toolchain32 = os.path.join(
+                    toolchains_dir,
+                    TOOLCHAIN_PREFIX["arm"]
+                )
 
     def create_config(self):
         if (os.path.exists(self.config_dir)):
@@ -47,25 +73,9 @@ class Kernel():
         with open(_config_file, 'w') as _output:
             json.dump(_config, _output, indent=4)
 
-    def build(self, toolchain_dir: str):
+    def build(self):
         if not (os.path.exists(self.source_code)):
             raise FileNotFoundError("Kernel source code not found")
-
-        # Locate toolchain binaries
-        if (self.arch == "arm"):
-            toolchain_dir = os.path.join(
-                toolchain_dir,
-                os.path.join("bin", "arm-linux-androideabi-")
-            )
-        elif (self.arch == "arm64"):
-            toolchain32_dir = os.path.join(
-                toolchain_dir,
-                os.path.join("bin", "arm-linux-androideabi-")
-            )
-            toolchain_dir = os.path.join(
-                toolchain_dir,
-                os.path.join("bin", "aarch64-linux-android-")
-            )
 
         print("\n\n Started build for {name} {version} {arch}".format(
             name = self.name,
@@ -93,12 +103,12 @@ class Kernel():
             "KCONFIG_NOTIMESTAMP=true",
             "ARCH={}".format(self.arch),
             "SUB_ARCH={}".format(self.arch),
-            "CROSS_COMPILE={}".format(toolchain_dir),
+            "CROSS_COMPILE={}".format(self.toolchain),
         ]
 
         # Add CROSS_COMPILE_ARM32 for some devices
         if (self.arch == "arm64"):
-            _variables.append("CROSS_COMPILE_ARM32={}".format(toolchain32_dir))
+            _variables.append("CROSS_COMPILE_ARM32={}".format(self.toolchain32))
 
         # Start compiling.
         print("\n\n")

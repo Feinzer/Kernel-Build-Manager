@@ -43,18 +43,7 @@ class Kernel():
 
     def save_config(self):
         _config_file = os.path.join(self.config_dir, "config.json")
-        _config = {
-            "name": self.name,
-            "source_code": self.source_code,
-            "version": self.version,
-            "kernel_arch": self.arch,
-            "target_android": self.target_android,
-            "stable_release": self.stable_release,
-            "device_codename": self.device_codename,
-            "defconfig": self.defconfig,
-            "auto_dtb": self.auto_dtb,
-            "clean_build": self.clean_build,
-        }
+        _config = vars(self)
         with open(_config_file, 'w') as _output:
             json.dump(_config, _output, indent=4)
 
